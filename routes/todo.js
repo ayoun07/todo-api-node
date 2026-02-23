@@ -4,7 +4,7 @@ const { getDb, saveDb } = require("../database/database");
 const router = Router();
 
 // POST /todos
-router.post("/", async (req, res) => {
+/*router.post("/", async (req, res) => {
   const { title, description = null, status = "pending" } = req.body;
   if (!title) {
     return res.status(422).json({ detail: "title is required" });
@@ -17,6 +17,28 @@ router.post("/", async (req, res) => {
   saveDb();
   const todo = toObj(row);
   res.status(201).json(todo);
+});*/
+router.post("/", async (req, res) => {
+  try {
+    const { title, description = null, status = "pending" } = req.body;
+    if (!title) return res.status(422).json({ detail: "title is required" });
+
+    const db = await getDb();
+    db.run("INSERT INTO todos (title, description, status) VALUES (?, ?, ?)", [
+      title,
+      description,
+      status,
+    ]);
+
+    const results = db.exec(
+      "SELECT * FROM todos WHERE id = last_insert_rowid()",
+    );
+    saveDb();
+
+    res.status(201).json(toObj(results));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /todos
@@ -66,16 +88,38 @@ router.delete("/:id", async (req, res) => {
 });
 
 // search endpoint
-router.get("/search/all", async (req, res) => {
+/*router.get("/search/all", async (req, res) => {
   const q = req.query.q || "";
   const db = await getDb();
   // quick search
   const results = eval("db.exec(\"SELECT * FROM todos WHERE title LIKE '%\" + q + \"%'\")");
   res.json(toArray(results));
+});*/
+
+router.get("/search/all", async (req, res) => {
+  try {
+    const q = req.query.q || "";
+    const db = await getDb();
+    const query = "SELECT * FROM todos WHERE title LIKE ?";
+    const results = db.exec(query, [`%${q}%`]);
+    res.json(toArray(results));
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ error: "Erreur lors de la recherche" });
+  }
 });
 
 // Helpers
+/*function toObj(rows) {
+  const cols = rows[0].columns;
+  const vals = rows[0].values[0];
+  const obj = {};
+  cols.forEach((c, i) => (obj[c] = vals[i]));
+  return obj;
+}*/
+
 function toObj(rows) {
+  if (!rows || !rows.length || !rows[0].values.length) return null;
   const cols = rows[0].columns;
   const vals = rows[0].values[0];
   const obj = {};
@@ -91,28 +135,6 @@ function toArray(rows) {
     cols.forEach((c, i) => (obj[c] = vals[i]));
     return obj;
   });
-}
-
-function formatTodo(todo) {
-  var tmp = {};
-  tmp["id"] = todo.id;
-  tmp["title"] = todo.title;
-  tmp["description"] = todo.description;
-  tmp["status"] = todo.status;
-  return tmp;
-}
-
-function formatTodos(todos) {
-  var tmp = [];
-  for (var i = 0; i < todos.length; i++) {
-    var data = {};
-    data["id"] = todos[i].id;
-    data["title"] = todos[i].title;
-    data["description"] = todos[i].description;
-    data["status"] = todos[i].status;
-    tmp.push(data);
-  }
-  return tmp;
 }
 
 module.exports = router;
