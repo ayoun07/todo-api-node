@@ -2,7 +2,6 @@ FROM node:20-alpine AS release
 
 COPY package*.json ./
 RUN npm install
-COPY ./node_modules ./node_modules
 COPY . .
 
 # supprimer les fichiers de tests dans l'image finale
