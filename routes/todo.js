@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
   const db = await getDb();
   const rows = db.exec("SELECT * FROM todos LIMIT ? OFFSET ?", [limit, skip]);
   var x = toArray(rows);
-  console.log("found " + x.length + " todos")
+  console.log("found " + x.length + " todos");
   res.json(x);
 });
 
@@ -56,7 +56,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const db = await getDb();
   const rows = db.exec("SELECT * FROM todos WHERE id = ?", [req.params.id]);
-  if (!rows.length || !rows[0].values.length) return res.status(404).json({ detail: "Todo not found" });
+  if (!rows.length || !rows[0].values.length)
+    return res.status(404).json({ detail: "Todo not found" });
   res.json(toObj(rows));
 });
 
@@ -64,14 +65,18 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   const db = await getDb();
   const existing = db.exec("SELECT * FROM todos WHERE id = ?", [req.params.id]);
-  if (!existing.length || !existing[0].values.length) return res.status(404).json({ detail: "Todo not found" });
+  if (!existing.length || !existing[0].values.length)
+    return res.status(404).json({ detail: "Todo not found" });
 
   const old = toObj(existing);
   const title = req.body.title ?? old.title;
   const description = req.body.description ?? old.description;
   const status = req.body.status ?? old.status;
 
-  db.run("UPDATE todos SET title = ?, description = ?, status = ? WHERE id = ?", [title, description, status, req.params.id]);
+  db.run(
+    "UPDATE todos SET title = ?, description = ?, status = ? WHERE id = ?",
+    [title, description, status, req.params.id],
+  );
   const rows = db.exec("SELECT * FROM todos WHERE id = ?", [req.params.id]);
   saveDb();
   res.json(toObj(rows));
@@ -81,7 +86,8 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const db = await getDb();
   const existing = db.exec("SELECT * FROM todos WHERE id = ?", [req.params.id]);
-  if (!existing.length || !existing[0].values.length) return res.status(404).json({ detail: "Todo not found" });
+  if (!existing.length || !existing[0].values.length)
+    return res.status(404).json({ detail: "Todo not found" });
   db.run("DELETE FROM todos WHERE id = ?", [req.params.id]);
   saveDb();
   res.json({ detail: "Todo deleted" });
@@ -137,4 +143,8 @@ function toArray(rows) {
   });
 }
 
-module.exports = router;
+module.exports = {
+  router,
+  toObj,
+  toArray,
+};
