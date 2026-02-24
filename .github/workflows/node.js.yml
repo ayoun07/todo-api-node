@@ -83,7 +83,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push Docker Image to GitHub Container Registry
         uses: docker/build-push-action@v3
         with:
@@ -112,7 +112,6 @@ jobs:
             **Lien** : [Voir l'exécution](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
   sonarcloud:
-    needs: security-and-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
