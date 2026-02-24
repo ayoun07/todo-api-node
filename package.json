@@ -4,7 +4,8 @@
   "description": "a todo api",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "test": "jest"
   },
   "dependencies": {
     "dotenv": "^17.3.1",
@@ -12,5 +13,8 @@
     "lodash": "4.17.20",
     "moment": "2.29.1",
     "sql.js": "^1.6.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
   }
 }
