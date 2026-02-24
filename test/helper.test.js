@@ -1,4 +1,4 @@
-const { toObj, toArray } = require("../routes/todo"); // Update the path
+const { toObj, toArray } = require("../helpers");
 
 describe("toObj", () => {
   it("should convert a single row to an object", () => {

@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const { router } = require("./routes/todo");
+const todoRouter = require("./routes/todo");
 
 const SECRET_KEY = process.env.SECRET_KEY;
 const API_KEY = process.env.API_KEY;
@@ -18,7 +18,7 @@ app.get("/debug", (_req, res) => {
   res.json({ secret: SECRET_KEY, api_key: API_KEY, env: process.env });
 });
 
-app.use("/todos", router);
+app.use("/todos", todoRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>

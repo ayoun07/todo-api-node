@@ -1,6 +1,6 @@
 const request = require("supertest");
 const express = require("express");
-const { router } = require("../routes/todo");
+const router = require("../routes/todo");
 const { getDb, saveDb, mockDb } = require("../database/database");
 
 jest.mock("../database/database");
