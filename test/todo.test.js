@@ -1,209 +1,251 @@
 const request = require('supertest');
 const express = require('express');
-const router = require('../routes/todo');
-const { getDb, saveDb, mockDb } = require('../database/database');
+const router = require('../routes/todo'); // Assure-toi que le chemin est correct
+const { getDb, saveDb } = require('../database/database');
+const { toObj, toArray } = require('../helpers');
 
 jest.mock('../database/database');
-
-const app = express();
-app.use(express.json());
-app.use('/', router);
+jest.mock('../helpers');
 
 describe('Todos API', () => {
+  let app;
+
   beforeEach(() => {
+    app = express();
+    app.use(express.json());
+    app.use('/todos', router);
+  });
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // POST /todos
-  describe('POST /todos', () => {
-    it('should create a new todo', async () => {
-      const mockTodo = {
-        id: 1,
-        title: 'Test Todo',
-        description: null,
-        status: 'pending',
-      };
-      mockDb.exec.mockReturnValueOnce([
-        {
-          columns: ['id', 'title', 'description', 'status'],
-          values: [
-            [
-              mockTodo.id,
-              mockTodo.title,
-              mockTodo.description,
-              mockTodo.status,
-            ],
-          ],
-        },
-      ]);
+  // Mock des données de base
+  const mockTodos = [
+    {
+      id: 1,
+      title: 'Test Todo 1',
+      description: 'Description 1',
+      status: 'pending',
+    },
+    {
+      id: 2,
+      title: 'Test Todo 2',
+      description: 'Description 2',
+      status: 'completed',
+    },
+  ];
 
-      const response = await request(app)
-        .post('/')
-        .send({ title: 'Test Todo' })
-        .expect(201);
-
-      expect(response.body).toEqual(mockTodo);
-      expect(mockDb.run).toHaveBeenCalled();
-      expect(saveDb).toHaveBeenCalled();
-    });
-
-    it('should return 422 if title is missing', async () => {
-      await request(app)
-        .post('/')
-        .send({ description: 'No title' })
-        .expect(422);
-    });
-  });
-
-  // GET /todos
+  // GET /todos (liste avec pagination)
   describe('GET /todos', () => {
-    it('should return a list of todos', async () => {
-      const mockTodos = [
-        { id: 1, title: 'Todo 1', description: null, status: 'pending' },
-        { id: 2, title: 'Todo 2', description: null, status: 'pending' },
-      ];
-      mockDb.exec.mockReturnValueOnce([
-        {
-          columns: ['id', 'title', 'description', 'status'],
-          values: mockTodos.map((todo) => [
-            todo.id,
-            todo.title,
-            todo.description,
-            todo.status,
-          ]),
-        },
-      ]);
-
-      const response = await request(app).get('/').expect(200);
-
-      expect(response.body).toEqual(mockTodos);
-    });
-  });
-
-  // GET /todos/:id
-  describe('GET /todos/:id', () => {
-    it('should return a single todo', async () => {
-      const mockTodo = {
-        id: 1,
-        title: 'Test Todo',
-        description: null,
-        status: 'pending',
-      };
-      mockDb.exec.mockReturnValueOnce([
-        {
-          columns: ['id', 'title', 'description', 'status'],
-          values: [
-            [
-              mockTodo.id,
-              mockTodo.title,
-              mockTodo.description,
-              mockTodo.status,
-            ],
-          ],
-        },
-      ]);
-
-      const response = await request(app).get('/1').expect(200);
-
-      expect(response.body).toEqual(mockTodo);
-    });
-
-    it('should return 404 if todo not found', async () => {
-      mockDb.exec.mockReturnValueOnce([]);
-
-      await request(app).get('/999').expect(404);
-    });
-  });
-
-  // PUT /todos/:id
-  describe('PUT /todos/:id', () => {
-    it('should update a todo', async () => {
-      const mockTodo = {
-        id: 1,
-        title: 'Updated Todo',
-        description: null,
-        status: 'pending',
-      };
-      mockDb.exec
-        .mockReturnValueOnce([
+    it('devrait retourner une liste de todos', async () => {
+      const mockDb = {
+        exec: jest.fn().mockReturnValue([
           {
             columns: ['id', 'title', 'description', 'status'],
-            values: [[mockTodo.id, 'Old Todo', null, 'pending']],
+            values: mockTodos.map((todo) => Object.values(todo)),
           },
-        ])
-        .mockReturnValueOnce([
-          {
-            columns: ['id', 'title', 'description', 'status'],
-            values: [
-              [
-                mockTodo.id,
-                mockTodo.title,
-                mockTodo.description,
-                mockTodo.status,
-              ],
-            ],
-          },
-        ]);
+        ]),
+      };
+      getDb.mockResolvedValue(mockDb);
+      toArray.mockReturnValue(mockTodos);
 
       const response = await request(app)
-        .put('/1')
-        .send({ title: 'Updated Todo' })
-        .expect(200);
+        .get('/todos')
+        .query({ skip: 0, limit: 10 });
 
-      expect(response.body).toEqual(mockTodo);
-      expect(mockDb.run).toHaveBeenCalled();
-      expect(saveDb).toHaveBeenCalled();
-    });
-
-    it('should return 404 if todo not found', async () => {
-      mockDb.exec.mockReturnValueOnce([]);
-
-      await request(app)
-        .put('/999')
-        .send({ title: 'Updated Todo' })
-        .expect(404);
-    });
-  });
-
-  // DELETE /todos/:id
-  describe('DELETE /todos/:id', () => {
-    it('should delete a todo', async () => {
-      mockDb.exec.mockReturnValueOnce([{ columns: ['id'], values: [[1]] }]);
-
-      await request(app).delete('/1').expect(200);
-
-      expect(mockDb.run).toHaveBeenCalled();
-      expect(saveDb).toHaveBeenCalled();
-    });
-
-    it('should return 404 if todo not found', async () => {
-      mockDb.exec.mockReturnValueOnce([]);
-
-      await request(app).delete('/999').expect(404);
-    });
-  });
-
-  // GET /todos/search/all
-  describe('GET /todos/search/all', () => {
-    it('should return todos matching search query', async () => {
-      const mockTodos = [
-        { id: 1, title: 'Test Todo', description: null, status: 'pending' },
-      ];
-      mockDb.exec.mockReturnValueOnce([
-        {
-          columns: ['id', 'title', 'description', 'status'],
-          values: mockTodos.map((todo) => [
-            todo.id,
-            todo.title,
-            todo.description,
-            todo.status,
-          ]),
-        },
-      ]);
-
-      const response = await request(app).get('/search/all?q=Test').expect(200);
-
+      expect(response.status).toBe(200);
       expect(response.body).toEqual(mockTodos);
+      expect(getDb).toHaveBeenCalled();
+    });
+  });
+
+  // GET /todos/:id (récupérer un todo par ID)
+  describe('GET /todos/:id', () => {
+    it('devrait retourner un todo si trouvé', async () => {
+      const mockDb = {
+        exec: jest.fn().mockReturnValue([
+          {
+            columns: ['id', 'title', 'description', 'status'],
+            values: [[1, 'Test Todo 1', 'Description 1', 'pending']],
+          },
+        ]),
+      };
+      getDb.mockResolvedValue(mockDb);
+      toObj.mockReturnValue(mockTodos[0]);
+
+      const response = await request(app).get('/todos/1');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockTodos[0]);
+    });
+
+    it("devrait retourner 404 si le todo n'existe pas", async () => {
+      const mockDb = {
+        exec: jest.fn().mockReturnValue([]),
+      };
+      getDb.mockResolvedValue(mockDb);
+
+      const response = await request(app).get('/todos/999');
+
+      expect(response.status).toBe(404);
+      expect(response.body.detail).toBe('Todo not found');
+    });
+  });
+
+  // POST /todos (créer un todo)
+  describe('POST /todos', () => {
+    it('devrait créer un nouveau todo', async () => {
+      const newTodo = {
+        title: 'Nouveau Todo',
+        description: 'Nouvelle description',
+        status: 'pending',
+      };
+      const mockDb = {
+        run: jest.fn(),
+        exec: jest.fn().mockReturnValue([
+          {
+            columns: ['id', 'title', 'description', 'status'],
+            values: [[3, newTodo.title, newTodo.description, newTodo.status]],
+          },
+        ]),
+      };
+      getDb.mockResolvedValue(mockDb);
+      toObj.mockReturnValue({ id: 3, ...newTodo });
+
+      const response = await request(app).post('/todos').send(newTodo);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({ id: 3, ...newTodo });
+      expect(saveDb).toHaveBeenCalled();
+    });
+
+    it('devrait retourner 422 si le titre est manquant', async () => {
+      const response = await request(app)
+        .post('/todos')
+        .send({ description: 'Pas de titre' });
+
+      expect(response.status).toBe(422);
+      expect(response.body.detail).toBe('title is required');
+    });
+  });
+
+  // PUT /todos/:id (mettre à jour un todo)
+  describe('PUT /todos/:id', () => {
+    it('devrait mettre à jour un todo existant', async () => {
+      const updatedTodo = {
+        title: 'Todo mis à jour',
+        description: 'Description mise à jour',
+        status: 'completed',
+      };
+      const mockDb = {
+        exec: jest
+          .fn()
+          .mockReturnValueOnce([
+            {
+              columns: ['id', 'title', 'description', 'status'],
+              values: [[1, 'Ancien Todo', 'Ancienne description', 'pending']],
+            },
+          ]) // Pour la vérification d'existence
+          .mockReturnValueOnce([
+            {
+              columns: ['id', 'title', 'description', 'status'],
+              values: [
+                [
+                  1,
+                  updatedTodo.title,
+                  updatedTodo.description,
+                  updatedTodo.status,
+                ],
+              ],
+            },
+          ]), // Après la mise à jour
+        run: jest.fn(),
+      };
+      getDb.mockResolvedValue(mockDb);
+      toObj
+        .mockReturnValueOnce({
+          id: 1,
+          title: 'Ancien Todo',
+          description: 'Ancienne description',
+          status: 'pending',
+        })
+        .mockReturnValueOnce({ id: 1, ...updatedTodo });
+
+      const response = await request(app).put('/todos/1').send(updatedTodo);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ id: 1, ...updatedTodo });
+      expect(saveDb).toHaveBeenCalled();
+    });
+
+    it("devrait retourner 404 si le todo n'existe pas", async () => {
+      const mockDb = {
+        exec: jest.fn().mockReturnValue([]),
+      };
+      getDb.mockResolvedValue(mockDb);
+
+      const response = await request(app)
+        .put('/todos/999')
+        .send({ title: 'Nouveau titre' });
+
+      expect(response.status).toBe(404);
+      expect(response.body.detail).toBe('Todo not found');
+    });
+  });
+
+  // DELETE /todos/:id (supprimer un todo)
+  describe('DELETE /todos/:id', () => {
+    it('devrait supprimer un todo existant', async () => {
+      const mockDb = {
+        exec: jest
+          .fn()
+          .mockReturnValueOnce([{ columns: ['id'], values: [[1]] }])
+          .mockReturnValueOnce([]),
+        run: jest.fn(),
+      };
+      getDb.mockResolvedValue(mockDb);
+
+      const response = await request(app).delete('/todos/1');
+
+      expect(response.status).toBe(200);
+      expect(response.body.detail).toBe('Todo deleted');
+      expect(saveDb).toHaveBeenCalled();
+    });
+
+    it("devrait retourner 404 si le todo n'existe pas", async () => {
+      const mockDb = {
+        exec: jest.fn().mockReturnValue([]),
+      };
+      getDb.mockResolvedValue(mockDb);
+
+      const response = await request(app).delete('/todos/999');
+
+      expect(response.status).toBe(404);
+      expect(response.body.detail).toBe('Todo not found');
+    });
+  });
+
+  // GET /todos/search/all (recherche textuelle)
+  describe('GET /todos/search/all', () => {
+    it('devrait retourner les todos correspondant à la recherche', async () => {
+      const mockDb = {
+        exec: jest.fn().mockReturnValue([
+          {
+            columns: ['id', 'title', 'description', 'status'],
+            values: [[1, 'Test Todo 1', 'Description 1', 'pending']],
+          },
+        ]),
+      };
+      getDb.mockResolvedValue(mockDb);
+      toArray.mockReturnValue([mockTodos[0]]);
+
+      const response = await request(app)
+        .get('/todos/search/all')
+        .query({ q: 'Test' });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([mockTodos[0]]);
     });
   });
 });
