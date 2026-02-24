@@ -112,7 +112,6 @@ jobs:
             **Lien** : [Voir l'exécution](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
   sonarcloud:
-      needs: security-and-build
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v4
@@ -125,7 +124,6 @@ jobs:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   deploy:
-      needs: security-and-build
       runs-on: ubuntu-latest
       if: github.ref == 'refs/heads/main' 
       steps:
