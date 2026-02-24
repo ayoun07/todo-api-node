@@ -124,7 +124,7 @@ jobs:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   deploy:
-      needs: build-and-test
+      needs: security-and-build
       runs-on: ubuntu-latest
       if: github.ref == 'refs/heads/main' 
       steps:
