@@ -33,27 +33,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
 
-    - name: Build final  Image
-      run: docker build -t prod-todo-api-node .
+      - name: Build final  Image
+        run: docker build -t prod-todo-api-node .
 
-    - name: Discord notification
-      if: always() 
-      uses: rjstone/discord-webhook-notify@v1
-      with:
-        severity: ${{ job.status == 'success' && 'info' || 'error' }}
-        details: 'La pipeline du projet Todo-API est terminée !'
-        webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-        description: |
-          Statut : ${{ job.status }}
-          Branche : ${{ github.ref_name }}
-          Commit : ${{ github.event.head_commit.message }}
-          Lien : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Discord notification
+        if: always()
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: ${{ job.status == 'success' && 'info' || 'error' }}
+          details: 'La pipeline du projet Todo-API est terminée !'
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          description: |
+            Statut : ${{ job.status }}
+            Branche : ${{ github.ref_name }}
+            Commit : ${{ github.event.head_commit.message }}
+            Lien : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
