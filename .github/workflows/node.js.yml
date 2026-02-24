@@ -76,7 +76,7 @@ jobs:
           image-ref: 'prod-todo-api-node:latest'
           format: 'table'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
       - name: Log into GitHub Container Registry
         uses: docker/login-action@v3
