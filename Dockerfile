@@ -6,7 +6,7 @@ COPY ./node_modules ./node_modules
 COPY . .
 
 # supprimer les fichiers de tests dans l'image finale
-RUN rm -rf testing/ 
+RUN rm -rf test/ 
 
 EXPOSE 3000
 CMD ["node", "src/server.js"]

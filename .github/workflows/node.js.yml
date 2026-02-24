@@ -22,6 +22,7 @@ jobs:
 
       - name: Test
         run: npm test
+
   code-coverage:
     runs-on: ubuntu-latest
     steps:
@@ -44,7 +45,7 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 5
-  build-and-test:
+  security-and-build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -55,6 +56,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Security scan with CodeQL
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: javascript
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -64,8 +70,17 @@ jobs:
       - run: npm run build --if-present
       - run: npm test
 
+
       - name: Build final  Image
-        run: docker build -t prod-todo-api-node .
+        run: docker build -t prod-todo-api-node:latest .
+
+      - name: Scan Docker Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'prod-todo-api-node:latest'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
 
   notify:
     runs-on: ubuntu-latest
