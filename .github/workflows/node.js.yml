@@ -7,6 +7,21 @@ on:
     branches: ['main']
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code
+        run: npx eslint
   test:
     runs-on: ubuntu-latest
     steps:
@@ -48,10 +63,6 @@ jobs:
   security-and-build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,15 +72,14 @@ jobs:
         with:
           languages: javascript
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '20'
           cache: 'npm'
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
-
 
       - name: Build final  Image
         run: docker build -t prod-todo-api-node:latest .
@@ -84,18 +94,18 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: security-and-build
     if: always()
     steps:
       - name: Discord notification
         uses: rjstone/discord-webhook-notify@v1
         with:
-          severity: ${{ needs.build-and-test.result == 'success' && 'info' || 'error' }}
+          severity: ${{ needs.security-and-build.result == 'success' && 'info' || 'error' }}
           # On simplifie les détails pour éviter le "Bad Request"
           details: |
-            ${{ needs.build-and-test.result == 'success' && '✅ Succès' || '❌ Échec' }} sur ${{ github.repository }}
+            ${{ needs.security-and-build.result == 'success' && '✅ Succès' || '❌ Échec' }} sur ${{ github.repository }}
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           description: |
-            **Statut** : ${{ needs.build-and-test.result }}
+            **Statut** : ${{ needs.security-and-build.result }}
             **Branche** : ${{ github.ref_name }}
             **Lien** : [Voir l'exécution](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
