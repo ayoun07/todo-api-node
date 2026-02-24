@@ -112,7 +112,6 @@ jobs:
             **Lien** : [Voir l'exécution](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
   sonarcloud:
-      needs: build-and-test
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v4
