@@ -47,24 +47,18 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
-    needs: build-and-test 
-    if: always()          
-    
+    needs: build-and-test
+    if: always()
     steps:
       - name: Discord notification
         uses: rjstone/discord-webhook-notify@v1
         with:
           severity: ${{ needs.build-and-test.result == 'success' && 'info' || 'error' }}
+          # On simplifie les détails pour éviter le "Bad Request"
           details: |
-            ${{ needs.build-and-test.result == 'success' && '✅ Succès Total !' || '❌ Quelque chose a cassé...' }}
+            ${{ needs.build-and-test.result == 'success' && '✅ Succès' || '❌ Échec' }} sur ${{ github.repository }}
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
           description: |
-            **Résumé de la Pipeline**
-            
-            🚀 **Projet** : `${{ github.repository }}`
-            📊 **Résultat** : `${{ needs.build-and-test.result }}` ${{ needs.build-and-test.result == 'success' && '🥳' || '😱' }}
-            🌿 **Branche** : `${{ github.ref_name }}`
-            📝 **Message** : ${{ github.event.head_commit.message }}
-            
-            🔗 [Voir les détails de l'exécution](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          color: ${{ needs.build-and-test.result == 'success' && '0x00ff00' || '0xff0000' }}
+            **Statut** : ${{ needs.build-and-test.result }}
+            **Branche** : ${{ github.ref_name }}
+            **Lien** : [Voir l'exécution](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
