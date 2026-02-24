@@ -128,5 +128,5 @@ jobs:
       runs-on: ubuntu-latest
       if: github.ref == 'refs/heads/main' 
       steps:
-        - name: Trigger Deployment
+        - name: Deploy to Render
           run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
