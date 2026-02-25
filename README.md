@@ -6,7 +6,7 @@
 Cette API permet de gérer une liste de tâches (To-Do List). Ce projet a été conçu pour mettre en œuvre une chaîne **CI/CD complète** avec un focus sur la qualité du code et la sécurité.
 
 ## 🚀 Fonctionnalités
-- Gestion des tâches (CRUD : Create, Read, Update, Delete).
+- Gestion des tâches (CRUD : Create, Read, Update, Delete). 
 - Documentation interactive via **Swagger**.
 - Base de données légère avec **SQLite**.
 
