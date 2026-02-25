@@ -4,7 +4,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-# supprimer les fichiers de tests dans l'image finale
+# supprestion les fichiers de tests dans l'image finale
 RUN rm -rf test/ 
 
 EXPOSE 3000
