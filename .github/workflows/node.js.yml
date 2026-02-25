@@ -132,6 +132,7 @@ jobs:
         with:
           args: >
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.coverage.exclusions=database/**
 
   deploy:
     runs-on: ubuntu-latest
