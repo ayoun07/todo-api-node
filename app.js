@@ -7,7 +7,6 @@ const todoRouter = require('./routes/todo');
 const app = express();
 app.use(express.json());
 
-// --- Configuration Swagger ---
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
