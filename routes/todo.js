@@ -74,6 +74,7 @@ router.get('/', async (req, res) => {
  *       404:
  *         description: Tâche non trouvée
  */
+// GET /todos/:id
 router.get('/:id', async (req, res) => {
   const db = await getDb();
   const rows = db.exec('SELECT * FROM todos WHERE id = ?', [req.params.id]);
@@ -147,14 +148,6 @@ router.post('/', async (req, res) => {
  *         description: Tâche mise à jour
  */
 
-// GET /todos/:id
-router.get('/:id', async (req, res) => {
-  const db = await getDb();
-  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [req.params.id]);
-  if (!rows.length || !rows[0].values.length)
-    return res.status(404).json({ detail: 'Todo not found' });
-  res.json(toObj(rows));
-});
 
 // PUT /todos/:id
 router.put('/:id', async (req, res) => {
@@ -228,14 +221,5 @@ router.get('/search/all', async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la recherche' });
   }
 });
-
-// Helpers
-/*function toObj(rows) {
-  const cols = rows[0].columns;
-  const vals = rows[0].values[0];
-  const obj = {};
-  cols.forEach((c, i) => (obj[c] = vals[i]));
-  return obj;
-}*/
 
 module.exports = router;

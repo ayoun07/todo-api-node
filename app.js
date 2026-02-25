@@ -4,7 +4,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const todoRouter = require('./routes/todo');
 
-const app = express(); // 1. On crée l'app d'abord !
+const app = express();
 app.use(express.json());
 
 // --- Configuration Swagger ---
@@ -26,7 +26,6 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-// -----------------------------
 
 const SECRET_KEY = process.env.SECRET_KEY;
 const API_KEY = process.env.API_KEY;
@@ -36,11 +35,11 @@ app.get('/', (_req, res) => {
   res.json({ message: 'Welcome to the Enhanced Express Todo App!' });
 });
 
-// Attention : Cet endpoint expose tes secrets !
-// À supprimer avant de donner l'URL à quelqu'un.
-app.get('/debug', (_req, res) => {
-  res.json({ secret: SECRET_KEY, api_key: API_KEY });
-});
+if(process.env.NODE_ENV === 'development'){
+  app.get('/debug', (_req, res) => {
+    res.json({ secret: SECRET_KEY, api_key: API_KEY });
+  });
+};
 
 app.use('/todos', todoRouter);
 
