@@ -30,6 +30,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const SECRET_KEY = process.env.SECRET_KEY;
 const API_KEY = process.env.API_KEY;
 
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.get('/', (_req, res) => {
   console.log('someone hit the root endpoint');
   res.json({ message: 'Welcome to the Enhanced Express Todo App!' });
