@@ -3,12 +3,12 @@ const { getDb, saveDb } = require('../database/database');
 const { toObj, toArray } = require('../helpers');
 const { z } = require('zod');
 
-const router = Router();
+const router = Router();  
 
 const querySchema = z.object({
+  q: z.string().default(''),
   skip: z.preprocess((val) => parseInt(val), z.number().min(0).default(0)),
-  limit: z.preprocess((val) => parseInt(val), z.number().min(1).max(100).default(10)),
-  q: z.string().default('')
+  limit: z.preprocess((val) => parseInt(val), z.number().min(1).max(100).default(10))
 });
 
 const idSchema = z.object({
@@ -218,13 +218,25 @@ router.put('/:id', async (req, res) => {
 
 // delete /todos/:id
 router.delete('/:id', async (req, res) => {
-  const result = idSchema.safeParse(req.params);
-  if (!result.success) return res.status(400).json({ error: "ID invalide" });
+  try {
+    const idResult = idSchema.safeParse(req.params);
+    if (!idResult.success) return res.status(400).json({ error: "Invalid ID" });
 
-  const db = await getDb();
-  db.run('DELETE FROM todos WHERE id = ?', [result.data.id]);
-  saveDb();
-  res.json({ detail: 'Todo deleted' });
+    const db = await getDb();
+    
+    const existing = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
+    
+    if (!existing?.length || !existing[0]?.values?.length) {
+      return res.status(404).json({ detail: 'Todo not found' });
+    }
+
+    db.run('DELETE FROM todos WHERE id = ?', [idResult.data.id]);
+    saveDb();
+    
+    res.json({ detail: 'Todo deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /**
