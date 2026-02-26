@@ -281,7 +281,12 @@ const response = await request(app)
   });
 
   it("devrait retourner 500 si la DB crash sur le SEARCH", async () => {
-    getDb.mockRejectedValue(new Error("Search Crash"));
+    const mockDb = {
+    run: jest.fn().mockImplementation(() => {
+      throw new Error("SQL Write Error");
+    }),
+  };
+  getDb.mockResolvedValue(mockDb);
 
    const response = await request(app)
       .get("/todos/search/all")

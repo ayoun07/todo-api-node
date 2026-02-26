@@ -77,6 +77,7 @@ router.get('/', async (req, res) => {
     res.json(toArray(rows));
     
   } catch (error) {
+    console.error("Erreur get détaillée :", error);
     res.status(500).json({ error: 'Erreur lors de la récupération des todos' });
   }
 });
@@ -118,6 +119,7 @@ router.get('/:id', async (req, res) => {
     res.json(toObj(rows));
     
   } catch (error) {
+    console.error("Erreur get-id détaillée :", error);
     res.status(500).json({ error: 'Erreur lors de la récupération du todo' });
   }
 });
@@ -159,6 +161,7 @@ router.post('/', async (req, res) => {
     saveDb();
     res.status(201).json(toObj(results));
   } catch (err) {
+    console.error("Erreur post détaillée :", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -212,6 +215,7 @@ router.put('/:id', async (req, res) => {
     res.json(toObj(rows));
     
   } catch (error) {
+    console.error("Erreur update détaillée :", error);
     res.status(500).json({ error: 'Erreur lors de la mise à jour du todo' });
   }
 });
@@ -251,6 +255,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ detail: 'Todo deleted' });
   } catch (err) {
+    console.error("Erreur delete détaillée :", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -284,6 +289,7 @@ router.get('/search/all', async (req, res) => {
     const results = db.exec(query, [`%${q}%`]);
     res.json(toArray(results));
   } catch (error) {
+    console.error("Erreur search détaillée :", error);
     res.status(500).json({ error: 'Erreur lors de la recherche' });
   }
 });
