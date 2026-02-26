@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 //URL db
-const DB_PATH = path.join(__dirname, '..', process.env.DB_PATH);
+const DB_PATH = path.join(__dirname, '..', process.env.DB_PATH || 'todo.db');
 
 let db;
 
