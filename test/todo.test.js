@@ -297,4 +297,46 @@ const response = await request(app)
   });
 });
 
+it("devrait retourner 500 si la DB crash sur le DELETE", async () => {
+  const mockDb = {
+    exec: jest.fn().mockReturnValue([{ columns: ["id"], values: [[1]] }]), // Trouve le todo
+    run: jest.fn().mockImplementation(() => { throw new Error("Delete failed"); }) // Mais crash au delete
+  };
+  getDb.mockResolvedValue(mockDb);
+
+  const response = await request(app).delete("/todos/1");
+  expect(response.status).toBe(500);
+});
+
+it("devrait retourner 404 sur PUT si le todo n'existe pas", async () => {
+  const mockDb = { exec: jest.fn().mockReturnValue([]) };
+  getDb.mockResolvedValue(mockDb);
+
+  const response = await request(app).put("/todos/9999").send({ title: "Update" });
+  expect(response.status).toBe(404);
+});
+
+it("devrait retourner 500 si la DB crash sur le PUT", async () => {
+  const mockDb = {
+    exec: jest.fn().mockReturnValue([{ columns: ["id"], values: [[1]] }]), // Existe
+    run: jest.fn().mockImplementation(() => { throw new Error("Update failed"); }) // Crash à l'update
+  };
+  getDb.mockResolvedValue(mockDb);
+
+  const response = await request(app).put("/todos/1").send({ title: "Update" });
+  expect(response.status).toBe(500);
+});
+
+it("devrait bloquer un ID négatif (Zod)", async () => {
+  const response = await request(app).get("/todos/-5");
+  expect(response.status).toBe(400); // Zod idSchema.positive()
+});
+
+it("devrait bloquer un titre trop long (Zod)", async () => {
+  const response = await request(app)
+    .post("/todos")
+    .send({ title: "a".repeat(101) }); // Zod .max(100)
+  expect(response.status).toBe(422);
+});
+
 });

@@ -37,7 +37,6 @@ app.get('/health', (_req, res) => {
 });
 
 app.get('/', (_req, res) => {
-  console.log('someone hit the root endpoint');
   res.json({ message: 'Welcome to the Enhanced Express Todo App!' });
 });
 
