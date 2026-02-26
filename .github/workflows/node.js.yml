@@ -21,7 +21,7 @@ jobs:
         run: npm ci
 
       - name: Lint code
-        run: npx eslint
+        run: npx eslint 
   test:
     runs-on: ubuntu-latest
     strategy:
