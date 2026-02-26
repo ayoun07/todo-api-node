@@ -117,7 +117,6 @@ jobs:
         uses: rjstone/discord-webhook-notify@v1
         with:
           severity: ${{ needs.security-and-build.result == 'success' && 'info' || 'error' }}
-          # On simplifie les détails pour éviter le "Bad Request"
           details: |
             ${{ needs.security-and-build.result == 'success' && '✅ Succès' || '❌ Échec' }} sur ${{ github.repository }}
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
@@ -154,3 +153,15 @@ jobs:
     steps:
       - name: Deploy to Render
         run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+  rollback:
+      needs: deploy
+      if: failure() 
+      runs-on: ubuntu-latest
+      steps:
+        - name: Trigger Rollback on Render
+          run: |
+            curl -X POST https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/rollback \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"reason": "Automation: Deployment job failed in GitHub Actions"}'
