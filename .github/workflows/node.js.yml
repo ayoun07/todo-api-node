@@ -127,7 +127,7 @@ jobs:
         run: |
           sleep 40
           # Test de la route /health
-          curl -f https://ton-api-production.onrender.com/health || echo "recovery=true" >> $GITHUB_OUTPUT
+          curl -f https://todo-api-node-h7rm.onrender.com/health || echo "recovery=true" >> $GITHUB_OUTPUT
       
       - name: Auto-Restart on Failure
         if: steps.health_check.outputs.recovery == 'true'
