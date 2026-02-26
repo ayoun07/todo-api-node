@@ -1,27 +1,20 @@
+require("dotenv").config();
 const Sentry = require("@sentry/node");
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
 });
-require("dotenv").config();
 const logger = require("./logger");
 const express = require("express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const todoRouter = require("./routes/todo");
-const morgan = require("morgan");
+const helmet = require("helmet");
 
 const app = express();
+app.use(helmet());
 app.use(express.json());
-
-app.use(morgan("dev"));
-
-app.use(
-  morgan("combined", {
-    stream: { write: (message) => logger.info(message.trim()) },
-  }),
-);
 
 const swaggerOptions = {
   definition: {
@@ -42,9 +35,6 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-const SECRET_KEY = process.env.SECRET_KEY;
-const API_KEY = process.env.API_KEY;
-
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
@@ -54,17 +44,13 @@ app.get("/", (_req, res) => {
   res.json({ message: "Welcome to the Enhanced Express Todo App!" });
 });
 
-if (process.env.NODE_ENV === "development") {
-  app.get("/debug", (_req, res) => {
-    res.json({ secret: SECRET_KEY, api_key: API_KEY });
-  });
-}
-
 app.use("/todos", todoRouter);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  logger.info(`Server running on http://localhost:${PORT}`),
-);
+if(require.main === module){
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () =>
+    logger.info(`Server running on http://localhost:${PORT}`),
+  );
+}
 
 module.exports = app;
