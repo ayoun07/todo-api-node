@@ -5,7 +5,18 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
+  workflow_call:
+    inputs:
+      run-tests:
+        description: 'Whether to run tests'
+        required: false
+        default: true
+        type: boolean
+      run-lint:
+        description: 'Whether to run linting'
+        required: false
+        default: true
+        type: boolean
 jobs:
   lint:
     runs-on: ubuntu-latest
