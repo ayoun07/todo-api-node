@@ -1,10 +1,6 @@
 name: Node.js Docker CI
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
   workflow_call:
     inputs:
       run-tests:
@@ -17,6 +13,11 @@ on:
         required: false
         default: true
         type: boolean
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  
 jobs:
   lint:
     runs-on: ubuntu-latest
