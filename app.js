@@ -1,3 +1,10 @@
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN, 
+  integrations: [new Sentry.Integrations.Http({ tracing: true })],
+  tracesSampleRate: 1.0,
+});
 require("dotenv").config();
 const logger = require("./logger");
 const express = require("express");
@@ -5,7 +12,6 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const todoRouter = require("./routes/todo");
 const morgan = require("morgan");
-
 
 const app = express();
 app.use(express.json());
