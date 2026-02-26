@@ -1,8 +1,7 @@
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN, 
-  integrations: [new Sentry.Integrations.Http({ tracing: true })],
+  dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
 });
 require("dotenv").config();
