@@ -89,7 +89,6 @@ describe("Todos API", () => {
       const response = await request(app).get("/todos/notanumber");
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("error");
-      
     });
   });
 
@@ -249,4 +248,48 @@ describe("Todos API", () => {
       expect(response.body).toEqual([mockTodos[0]]);
     });
   });
+
+
+  
+// --- SECTION POUR REMONTER LE COVERAGE (TEST DES CATCH 500) ---
+describe("Tests de sécurité et robustesse (Erreurs 500)", () => {
+  it("devrait retourner 500 si la DB crash sur le GET /", async () => {
+    getDb.mockRejectedValue(new Error("Database Crash"));
+
+const response = await request(app)
+      .get("/todos")
+      .query({ skip: 0, limit: 10 });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("devrait retourner 500 si la DB crash sur le POST", async () => {
+    const mockDb = {
+      run: jest.fn().mockImplementation(() => {
+        throw new Error("SQL Write Error");
+      }),
+    };
+    getDb.mockResolvedValue(mockDb);
+
+    const response = await request(app)
+      .post("/todos")
+      .send({ title: "Crash Test" });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("devrait retourner 500 si la DB crash sur le SEARCH", async () => {
+    getDb.mockRejectedValue(new Error("Search Crash"));
+
+   const response = await request(app)
+      .get("/todos/search/all")
+      .query({ q: "test", skip: 0, limit: 10 });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty("error");
+  });
+});
+
 });
