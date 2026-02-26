@@ -1,13 +1,13 @@
 name: Node.js Docker CI
 
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       run-tests:
         required: false
         default: true
         type: boolean
+  workflow_dispatch:
   push:
     branches: ["main"]
   pull_request:
