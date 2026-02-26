@@ -100,15 +100,6 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/prod-todo-api-node:latest
 
-  deploy-staging:
-    needs: security-and-build
-    environment: staging
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Blue-Green Canary Staging
-        run: curl -f -X POST ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
-
   deploy-production:
     needs: deploy-staging
     environment: production
