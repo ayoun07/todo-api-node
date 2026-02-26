@@ -67,13 +67,18 @@ const todoSchema = z.object({
  *                 $ref: '#/components/schemas/Todo'
  */
 router.get('/', async (req, res) => {
-  const result = querySchema.safeParse(req.query);
-  if (!result.success) return res.status(400).json(result.error);
-
-  const { skip, limit } = result.data;
-  const db = await getDb();
-  const rows = db.exec('SELECT * FROM todos LIMIT ? OFFSET ?', [limit, skip]);
-  res.json(toArray(rows));
+  try {
+    const result = querySchema.safeParse(req.query);
+    if (!result.success) return res.status(400).json(result.error);
+  
+    const { skip, limit } = result.data;
+    const db = await getDb();
+    const rows = db.exec('SELECT * FROM todos LIMIT ? OFFSET ?', [limit, skip]);
+    res.json(toArray(rows));
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des todos' });
+  }
 });
 
 /**
@@ -95,20 +100,26 @@ router.get('/', async (req, res) => {
  */
 // GET /todos/:id
 router.get('/:id', async (req, res) => {
-  const result = idSchema.safeParse(req.params);
-  
-  if (!result.success) {
-    return res.status(400).json({ error: "ID invalide (doit être un nombre positif)" });
-  }
 
-  const db = await getDb();
-  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [result.data.id]);
-
-  if (!rows.length || !rows[0].values.length) {
-    return res.status(404).json({ detail: 'Todo not found' });
-  }
+  try {
+    const result = idSchema.safeParse(req.params);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: "ID invalide (doit être un nombre positif)" });
+    }
   
-  res.json(toObj(rows));
+    const db = await getDb();
+    const rows = db.exec('SELECT * FROM todos WHERE id = ?', [result.data.id]);
+  
+    if (!rows.length || !rows[0].values.length) {
+      return res.status(404).json({ detail: 'Todo not found' });
+    }
+    
+    res.json(toObj(rows));
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération du todo' });
+  }
 });
 /**
  * @openapi
@@ -177,27 +188,33 @@ router.post('/', async (req, res) => {
 
 // PUT /todos/:id
 router.put('/:id', async (req, res) => {
-  const idResult = idSchema.safeParse(req.params);
-  const bodyResult = todoSchema.partial().safeParse(req.body);
 
-  if (!idResult.success || !bodyResult.success) {
-    return res.status(400).json({ error: "Données invalides" });
-  }
-
-  const db = await getDb();
-  const existing = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
-  if (!existing.length || !existing[0].values.length)
-    return res.status(404).json({ detail: 'Todo not found' });
-
-  const old = toObj(existing);
-  const { title = old.title, description = old.description, status = old.status } = bodyResult.data;
-
-  db.run('UPDATE todos SET title = ?, description = ?, status = ? WHERE id = ?', 
-    [title, description, status, idResult.data.id]);
+  try {
+    const idResult = idSchema.safeParse(req.params);
+    const bodyResult = todoSchema.partial().safeParse(req.body);
   
-  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
-  saveDb();
-  res.json(toObj(rows));
+    if (!idResult.success || !bodyResult.success) {
+      return res.status(400).json({ error: "Données invalides" });
+    }
+  
+    const db = await getDb();
+    const existing = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
+    if (!existing.length || !existing[0].values.length)
+      return res.status(404).json({ detail: 'Todo not found' });
+  
+    const old = toObj(existing);
+    const { title = old.title, description = old.description, status = old.status } = bodyResult.data;
+  
+    db.run('UPDATE todos SET title = ?, description = ?, status = ? WHERE id = ?', 
+      [title, description, status, idResult.data.id]);
+    
+    const rows = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
+    saveDb();
+    res.json(toObj(rows));
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du todo' });
+  }
 });
 
 /**
