@@ -101,7 +101,6 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/prod-todo-api-node:latest
 
   deploy-production:
-    needs: deploy-staging
     environment: production
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
