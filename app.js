@@ -3,9 +3,12 @@ const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const todoRouter = require('./routes/todo');
+const morgan = require('morgan');
 
 const app = express();
 app.use(express.json());
+
+app.use(morgan('dev'));
 
 const swaggerOptions = {
   definition: {
