@@ -1,8 +1,25 @@
 const { Router } = require('express');
 const { getDb, saveDb } = require('../database/database');
 const { toObj, toArray } = require('../helpers');
+const { z } = require('zod');
 
-const router = Router();
+const router = Router();  
+
+const querySchema = z.object({
+  q: z.string().default(''),
+  skip: z.preprocess((val) => parseInt(val), z.number().min(0).default(0)),
+  limit: z.preprocess((val) => parseInt(val), z.number().min(1).max(100).default(10))
+});
+
+const idSchema = z.object({
+  id: z.preprocess((val) => parseInt(val), z.number().positive())
+});
+
+const todoSchema = z.object({
+  title: z.string().min(1, "Le titre est requis").max(100),
+  description: z.string().nullable().optional(),
+  status: z.enum(['pending', 'completed']).default('pending')
+});
 
 /**
  * @openapi
@@ -50,8 +67,10 @@ const router = Router();
  *                 $ref: '#/components/schemas/Todo'
  */
 router.get('/', async (req, res) => {
-  const skip = parseInt(req.query.skip) || 0;
-  const limit = parseInt(req.query.limit) || 10;
+  const result = querySchema.safeParse(req.query);
+  if (!result.success) return res.status(400).json(result.error);
+
+  const { skip, limit } = result.data;
   const db = await getDb();
   const rows = db.exec('SELECT * FROM todos LIMIT ? OFFSET ?', [limit, skip]);
   res.json(toArray(rows));
@@ -76,13 +95,21 @@ router.get('/', async (req, res) => {
  */
 // GET /todos/:id
 router.get('/:id', async (req, res) => {
+  const result = idSchema.safeParse(req.params);
+  
+  if (!result.success) {
+    return res.status(400).json({ error: "ID invalide (doit être un nombre positif)" });
+  }
+
   const db = await getDb();
-  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [req.params.id]);
-  if (!rows.length || !rows[0].values.length)
+  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [result.data.id]);
+
+  if (!rows.length || !rows[0].values.length) {
     return res.status(404).json({ detail: 'Todo not found' });
+  }
+  
   res.json(toObj(rows));
 });
-
 /**
  * @openapi
  * /todos:
@@ -109,17 +136,16 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { title, description = null, status = 'pending' } = req.body;
-    if (!title) return res.status(422).json({ detail: 'title is required' });
+    const result = todoSchema.safeParse(req.body);
+    if (!result.success) return res.status(422).json(result.error);
+
+    const { title, description, status } = result.data;
     const db = await getDb();
     db.run('INSERT INTO todos (title, description, status) VALUES (?, ?, ?)', [
-      title,
-      description,
-      status,
+      title, description || null, status
     ]);
-    const results = db.exec(
-      'SELECT * FROM todos WHERE id = last_insert_rowid()',
-    );
+    
+    const results = db.exec('SELECT * FROM todos WHERE id = last_insert_rowid()');
     saveDb();
     res.status(201).json(toObj(results));
   } catch (err) {
@@ -151,21 +177,25 @@ router.post('/', async (req, res) => {
 
 // PUT /todos/:id
 router.put('/:id', async (req, res) => {
+  const idResult = idSchema.safeParse(req.params);
+  const bodyResult = todoSchema.partial().safeParse(req.body);
+
+  if (!idResult.success || !bodyResult.success) {
+    return res.status(400).json({ error: "Données invalides" });
+  }
+
   const db = await getDb();
-  const existing = db.exec('SELECT * FROM todos WHERE id = ?', [req.params.id]);
+  const existing = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
   if (!existing.length || !existing[0].values.length)
     return res.status(404).json({ detail: 'Todo not found' });
 
   const old = toObj(existing);
-  const title = req.body.title ?? old.title;
-  const description = req.body.description ?? old.description;
-  const status = req.body.status ?? old.status;
+  const { title = old.title, description = old.description, status = old.status } = bodyResult.data;
 
-  db.run(
-    'UPDATE todos SET title = ?, description = ?, status = ? WHERE id = ?',
-    [title, description, status, req.params.id],
-  );
-  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [req.params.id]);
+  db.run('UPDATE todos SET title = ?, description = ?, status = ? WHERE id = ?', 
+    [title, description, status, idResult.data.id]);
+  
+  const rows = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
   saveDb();
   res.json(toObj(rows));
 });
@@ -185,14 +215,28 @@ router.put('/:id', async (req, res) => {
  *       200:
  *         description: Message de confirmation
  */
+
+// delete /todos/:id
 router.delete('/:id', async (req, res) => {
-  const db = await getDb();
-  const existing = db.exec('SELECT * FROM todos WHERE id = ?', [req.params.id]);
-  if (!existing.length || !existing[0].values.length)
-    return res.status(404).json({ detail: 'Todo not found' });
-  db.run('DELETE FROM todos WHERE id = ?', [req.params.id]);
-  saveDb();
-  res.json({ detail: 'Todo deleted' });
+  try {
+    const idResult = idSchema.safeParse(req.params);
+    if (!idResult.success) return res.status(400).json({ error: "Invalid ID" });
+
+    const db = await getDb();
+    
+    const existing = db.exec('SELECT * FROM todos WHERE id = ?', [idResult.data.id]);
+    
+    if (!existing?.length || !existing[0]?.values?.length) {
+      return res.status(404).json({ detail: 'Todo not found' });
+    }
+
+    db.run('DELETE FROM todos WHERE id = ?', [idResult.data.id]);
+    saveDb();
+    
+    res.json({ detail: 'Todo deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /**
@@ -212,9 +256,15 @@ router.delete('/:id', async (req, res) => {
  */
 router.get('/search/all', async (req, res) => {
   try {
-    const q = req.query.q || '';
+    const result = querySchema.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({ error: "Paramètres de recherche invalides", details: result.error.format() });
+    }
+
+    const q = result.data.q;
     const db = await getDb();
     const query = 'SELECT * FROM todos WHERE title LIKE ?';
+    
     const results = db.exec(query, [`%${q}%`]);
     res.json(toArray(results));
   } catch (error) {
