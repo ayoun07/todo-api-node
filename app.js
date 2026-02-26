@@ -5,16 +5,18 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const todoRouter = require("./routes/todo");
 const morgan = require("morgan");
-app.use(
-  morgan("combined", {
-    stream: { write: (message) => logger.info(message.trim()) },
-  }),
-);
+
 
 const app = express();
 app.use(express.json());
 
 app.use(morgan("dev"));
+
+app.use(
+  morgan("combined", {
+    stream: { write: (message) => logger.info(message.trim()) },
+  }),
+);
 
 const swaggerOptions = {
   definition: {
