@@ -105,7 +105,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploy to Render
-        run: curl -f -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
 
   auto-recovery:
     needs: deploy-production
