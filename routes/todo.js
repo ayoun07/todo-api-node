@@ -148,14 +148,13 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const result = todoSchema.safeParse(req.body);
-    if (!result.success) return res.status(422).json(result.error);
+    if (!result.success) return res.status(422).json({ message: "Validation failed", details: result.error.issues });
 
     const { title, description, status } = result.data;
     const db = await getDb();
     db.run('INSERT INTO todos (title, description, status) VALUES (?, ?, ?)', [
       title, description || null, status
     ]);
-    
     const results = db.exec('SELECT * FROM todos WHERE id = last_insert_rowid()');
     saveDb();
     res.status(201).json(toObj(results));

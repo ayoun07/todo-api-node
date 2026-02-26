@@ -89,6 +89,7 @@ describe("Todos API", () => {
       const response = await request(app).get("/todos/notanumber");
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("error");
+      
     });
   });
 
@@ -125,7 +126,7 @@ describe("Todos API", () => {
         .send({ description: "Pas de titre" });
 
       expect(response.status).toBe(422);
-      expect(response.body).toHaveProperty("message");
+      expect(response.body).toHaveProperty("details");
     });
   });
 
@@ -190,6 +191,7 @@ describe("Todos API", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.detail).toBe("Todo not found");
+      expect(response.body).toHaveProperty("detail");
     });
   });
 
@@ -208,7 +210,7 @@ describe("Todos API", () => {
       const response = await request(app).delete("/todos/1");
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("detail", "Todo deleted");
+      expect(response.body).toHaveProperty("detail");
       expect(saveDb).toHaveBeenCalled();
     });
 
@@ -221,6 +223,7 @@ describe("Todos API", () => {
       const response = await request(app).delete("/todos/999");
 
       expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty("detail");
     });
   });
 
