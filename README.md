@@ -1,6 +1,6 @@
 # 📝 Todo API Node.js (CI/CD)
 
-## [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node)[![UptimeRobot Status](https://img.uptimerobot.com/api/upbox/802431910.png?t=30&s=200x50)](https://stats.uptimerobot.com/802431910)
+## [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node) ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m802431910-12212e835d4be682bd533294)
 
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) ![CodeQL](https://img.shields.io/badge/CodeQL-Analyzed-blue?style=for-the-badge&logo=github) ![Trivy](https://img.shields.io/badge/Trivy-Scanned-standard?style=for-the-badge&logo=aquasecurity) ![Morgan](https://img.shields.io/badge/Telemetry-Morgan-green?style=for-the-badge&logo=opsgenie)
 
