@@ -1,6 +1,6 @@
 # 📝 Todo API Node.js (CI/CD)
 
-## [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node)[![UptimeRobot Status](https://img.uptimerobot.com/api/upbox/802431910.png?t=30&s=200x50)](https://stats.uptimerobot.com/802431910)
+## [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ayoun07_todo-api-node&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ayoun07_todo-api-node) ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m802431910-12212e835d4be682bd533294)
 
 Cette API permet de gérer une liste de tâches (To-Do List). Ce projet a été conçu pour mettre en œuvre une chaîne **CI/CD complète** avec un focus sur la qualité du code et la sécurité.
 
