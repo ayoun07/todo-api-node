@@ -26,7 +26,7 @@ const swaggerOptions = {
     },
     servers: [
       { url: "http://localhost:3000" },
-      { url: "https://mon-api.onrender.com" },
+      { url: "https://todo-api-node-h7rm.onrender.com/" },
     ],
     components: {
       schemas: {
@@ -37,7 +37,6 @@ const swaggerOptions = {
             id: { type: "integer" },
             title: { type: "string" },
             description: { type: "string", nullable: true },
-            // ICI : On définit le status de façon ultra-simple sans enum
             status: { type: "string" },
           },
         },
