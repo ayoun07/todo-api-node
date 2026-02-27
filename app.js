@@ -28,6 +28,21 @@ const swaggerOptions = {
       { url: "http://localhost:3000" },
       { url: "https://mon-api.onrender.com" },
     ],
+    components: {
+      schemas: {
+        Todo: {
+          type: "object",
+          required: ["id", "title"],
+          properties: {
+            id: { type: "integer" },
+            title: { type: "string" },
+            description: { type: "string", nullable: true },
+            // ICI : On définit le status de façon ultra-simple sans enum
+            status: { type: "string" },
+          },
+        },
+      },
+    },
   },
   apis: ["./routes/*.js"],
 };
@@ -46,7 +61,7 @@ app.get("/", (_req, res) => {
 
 app.use("/todos", todoRouter);
 
-if(require.main === module){
+if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () =>
     logger.info(`Server running on http://localhost:${PORT}`),
