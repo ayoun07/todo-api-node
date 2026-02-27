@@ -102,6 +102,7 @@ jobs:
 
   deploy-production:
     runs-on: ubuntu-latest
+    needs: security-and-build
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploy to Render
@@ -115,7 +116,6 @@ jobs:
         id: health_check
         run: |
           sleep 40
-          # Test de la route /health
           curl -f https://todo-api-node-h7rm.onrender.com/health || echo "recovery=true" >> $GITHUB_OUTPUT
       
       - name: Auto-Restart on Failure
@@ -130,14 +130,10 @@ jobs:
     steps:
       - name: En attente que Render se déploie (30s)
         run: sleep 30
-
       - name: Test accès à l'API sur Render
         run: |
           URL="https://todo-api-node-h7rm.onrender.com/"
-          
-          echo "Vérification de $URL..."
           STATUS=$(curl -o /dev/null -s -w "%{http_code}" $URL)
-          
           if [ $STATUS -eq 200 ]; then
             echo "✅ Succès : L'API répond 200"
           else
@@ -162,10 +158,30 @@ jobs:
     needs: [deploy-production, rollback]
     if: always()
     steps:
-      - uses: rjstone/discord-webhook-notify@v1
+      - uses: actions/checkout@v4
+
+      - name: Get Commit Details
+        id: vars
+        run: |
+          echo "sha_short=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_OUTPUT
+          echo "commit_msg=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+
+      - name: Discord Notification
+        uses: rjstone/discord-webhook-notify@v1
         with:
-          severity: ${{ needs.deploy-production.result == 'success' && 'info' || 'error' }}
+          severity: ${{ needs.deploy-production.result == 'success' && 'info' || (needs.rollback.result == 'success' && 'warn' || 'error') }}
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          username: "Render Deploy Bot"
+          title: "🚀 Rapport de Déploiement Production"
           description: |
-            **Statut Prod** : ${{ needs.deploy-production.result }}
-            **Rollback déclenché** : ${{ needs.rollback.result == 'success' && 'Oui' || 'Non' }}
+            **Statut final** : `${{ needs.deploy-production.result == 'success' && 'SUCCESS ✅' || 'FAILED ❌' }}`
+            
+            **Détails du Commit**
+            - **Auteur** : `${{ github.actor }}`
+            - **Message** : `${{ steps.vars.outputs.commit_msg }}`
+            - **Lien** : [${{ steps.vars.outputs.sha_short }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+            
+            **Environnement**
+            - **Rollback activé** : `${{ needs.rollback.result == 'success' && 'OUI ⚠️' || 'NON' }}`
+            
+            [Voir les logs GitHub Actions](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
