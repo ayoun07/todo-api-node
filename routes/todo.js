@@ -7,8 +7,8 @@ const router = Router();
 
 const querySchema = z.object({
   q: z.string().default(''),
-  skip: z.preprocess((val) => parseInt(val), z.number().min(0).default(0)),
-  limit: z.preprocess((val) => parseInt(val), z.number().min(1).max(100).default(10))
+  skip: z.preprocess((val) => parseInt(val, 10), z.number().min(0).default(0)),
+  limit: z.preprocess((val) => parseInt(val, 10), z.number().min(1).default(10))
 });
 
 const idSchema = z.object({
@@ -37,7 +37,6 @@ const todoSchema = z.object({
  *           nullable: true
  *         status:
  *           type: string
- *           enum: [pending, completed]
  */
 
 /**
